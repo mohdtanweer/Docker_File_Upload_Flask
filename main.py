@@ -2,6 +2,7 @@ import os
 # import magic
 import urllib.request
 from app import app
+import PyPDF2
 from flask import Flask, flash, request, redirect, render_template
 from werkzeug.utils import secure_filename
 
@@ -29,13 +30,17 @@ def upload_file():
             flash('No file selected for uploading')
             return redirect(request.url)
         if file and allowed_file(file.filename):
-            if not os.path.isdir(app.config['UPLOAD_FOLDER']):
-                print("Creating Direcotry")
-                os.mkdir(app.config['UPLOAD_FOLDER'])
+            # if not os.path.isdir(app.config['UPLOAD_FOLDER']):
+            #     os.mkdir(app.config['UPLOAD_FOLDER'])
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            flash('File successfully uploaded')
-            return "File upload successfully!"
+            # flash('File successfully uploaded')
+            pdfFileObj = open(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'rb')
+            pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
+            pageObj = pdfReader.getPage(0)
+            text = pageObj.extractText()
+            pdfFileObj.close()
+            return text
         else:
             flash('Allowed file types are txt, pdf, png, jpg, jpeg, gif')
             return redirect(request.url)
